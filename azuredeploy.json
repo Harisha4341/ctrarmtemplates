@@ -1,7 +1,31 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
-  "parameters": {
+  "parameters": { 
+    "rgNamePrefix": {
+      "type": "string",
+      "defaultValue": "CTRDEMORG"
+    },
+    "rgLocation": {
+      "defaultValue": "eastus2",
+      "type": "string"
+    },
+    "storageAccountName": {
+      "type": "string",
+      "defaultValue": "cseastus1003200094e05857"
+    },
+    "storageAccountResourceGroup": {
+      "type": "string",
+      "defaultValue": "cloud-shell-storage-eastus"
+    },
+    "virtualNetworks_agwVirtualNetwork2_name": {
+      "defaultValue": "agwVirtualNetwork2",
+      "type": "String"
+    },
+    "virtualNetworks_bedrockterraformvnet2_name": {
+      "defaultValue": "bedrockterraformvnet2",
+      "type": "String"
+    },
     "storageAccountType": {
       "type": "string",
       "defaultValue": "Standard_LRS",
@@ -25,8 +49,93 @@
   },
   "variables": {
     "storageAccountName": "[concat('store', uniquestring(resourceGroup().id))]"
+     "ManagedVnetPrefix": "10.0.0.0/16",
+      "ManagedVnetSubnet1Name": "Subnet-1",
+      "ManagedVnetSubnet1Prefix": "10.0.0.0/24",
+      "ManagedVnetSubnet2Name": "Subnet-2",
+      "ManagedVnetSubnet2Prefix": "10.0.1.0/24",
+      "AKSAGWVNETPrefix": "10.0.0.0/16",
+      "AKSAGWVNETSubnet1Name": "Subnet-1",
+      "AKSAGWVNETSubnet1Prefix": "10.0.0.0/24",
+      "AKSAGWVNETSubnet2Name": "Subnet-2",
+      "AKSAGWVNETSubnet2Prefix": "10.0.1.0/24",
+      "AKSVNETPrefix": "10.0.0.0/16",
+      "AKSVNETSubnet1Name": "Subnet-1",
+      "AKSVNETSubnet1Prefix": "10.0.0.0/24",
+      "AKSVNETSubnet2Name": "Subnet-2",
+      "AKSVNETSubnet2Prefix": "10.0.1.0/24"
   },
   "resources": [
+    {
+        "name": "[parameters('rgNamePrefix')]",
+        "type": "Microsoft.Resources/resourceGroups resource",
+        "location": "[parameters('rgLocation')]",
+        "apiVersion": "2019-10-01",
+        "tags": {},
+        "properties": {}
+      },
+    {
+        "name": "AKSAGWVNET",
+        "type": "Microsoft.Network/virtualNetworks",
+        "location": "[resourceGroup().location]",
+        "apiVersion": "2016-03-30",
+        "dependsOn": [],
+        "tags": {
+          "displayName": "AKSAGWVNET"
+        },
+        "properties": {
+          "addressSpace": {
+            "addressPrefixes": [
+              "[variables('AKSAGWVNETPrefix')]"
+            ]
+          },
+          "subnets": [
+            {
+              "name": "[variables('AKSAGWVNETSubnet1Name')]",
+              "properties": {
+                "addressPrefix": "[variables('AKSAGWVNETSubnet1Prefix')]"
+              }
+            },
+            {
+              "name": "[variables('AKSAGWVNETSubnet2Name')]",
+              "properties": {
+                "addressPrefix": "[variables('AKSAGWVNETSubnet2Prefix')]"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "AKSVNET",
+        "type": "Microsoft.Network/virtualNetworks",
+        "location": "[resourceGroup().location]",
+        "apiVersion": "2016-03-30",
+        "dependsOn": [],
+        "tags": {
+          "displayName": "AKSVNET"
+        },
+        "properties": {
+          "addressSpace": {
+            "addressPrefixes": [
+              "[variables('AKSVNETPrefix')]"
+            ]
+          },
+          "subnets": [
+            {
+              "name": "[variables('AKSVNETSubnet1Name')]",
+              "properties": {
+                "addressPrefix": "[variables('AKSVNETSubnet1Prefix')]"
+              }
+            },
+            {
+              "name": "[variables('AKSVNETSubnet2Name')]",
+              "properties": {
+                "addressPrefix": "[variables('AKSVNETSubnet2Prefix')]"
+              }
+            }
+          ]
+        }
+      },
     {
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2019-04-01",
