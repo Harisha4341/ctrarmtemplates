@@ -66,15 +66,7 @@
       "AKSVNETSubnet2Prefix": "10.0.1.0/24"
   },
   "resources": [
-    {
-        "name": "[parameters('rgNamePrefix')]",
-        "type": "Microsoft.Resources/resourceGroups resource",
-        "location": "[parameters('rgLocation')]",
-        "apiVersion": "2019-10-01",
-        "tags": {},
-        "properties": {}
-      },
-    {
+       {
         "name": "AKSAGWVNET",
         "type": "Microsoft.Network/virtualNetworks",
         "location": "[resourceGroup().location]",
