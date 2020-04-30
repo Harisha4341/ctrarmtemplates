@@ -1,97 +1,84 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
-  "parameters": { 
-    "location": {
+  "parameters": {
+    "agwvnetName": {
       "type": "string",
-      "defaultValue": "[resourceGroup().location]",
-      "metadata": {
-        "description": "Location for all resources."
-      }
-    }
-  },
+      "minLength": 1
+    }},
   "variables": {
-    "storageAccountName": "[concat('store', uniquestring(resourceGroup().id))]"
-     "ManagedVnetPrefix": "10.0.0.0/16",
-      "ManagedVnetSubnet1Name": "Subnet-1",
-      "ManagedVnetSubnet1Prefix": "10.0.0.0/24",
-      "ManagedVnetSubnet2Name": "Subnet-2",
-      "ManagedVnetSubnet2Prefix": "10.0.1.0/24",
-      "AKSAGWVNETPrefix": "10.0.0.0/16",
-      "AKSAGWVNETSubnet1Name": "Subnet-1",
-      "AKSAGWVNETSubnet1Prefix": "10.0.0.0/24",
-      "AKSAGWVNETSubnet2Name": "Subnet-2",
-      "AKSAGWVNETSubnet2Prefix": "10.0.1.0/24",
-      "AKSVNETPrefix": "10.0.0.0/16",
-      "AKSVNETSubnet1Name": "Subnet-1",
-      "AKSVNETSubnet1Prefix": "10.0.0.0/24",
-      "AKSVNETSubnet2Name": "Subnet-2",
-      "AKSVNETSubnet2Prefix": "10.0.1.0/24"
-  },
+    "AKSPrefix": "10.0.0.0/16",
+    "AKSSubnet1Name": "Subnet-1",
+    "AKSSubnet1Prefix": "10.0.0.0/24",
+    "AKSSubnet2Name": "Subnet-2",
+    "AKSSubnet2Prefix": "10.0.1.0/24",
+    "agwvnetPrefix": "10.0.0.0/16",
+    "agwvnetSubnet1Name": "Subnet-1",
+    "agwvnetSubnet1Prefix": "10.0.0.0/24",
+    "agwvnetSubnet2Name": "Subnet-2",
+    "agwvnetSubnet2Prefix": "10.0.1.0/24"},
   "resources": [
-       {
-        "name": "AKSAGWVNET",
-        "type": "Microsoft.Network/virtualNetworks",
-        "location": "[resourceGroup().location]",
-        "apiVersion": "2016-03-30",
-        "dependsOn": [],
-        "tags": {
-          "displayName": "AKSAGWVNET"
-        },
-        "properties": {
-          "addressSpace": {
-            "addressPrefixes": [
-              "[variables('AKSAGWVNETPrefix')]"
-            ]
-          },
-          "subnets": [
-            {
-              "name": "[variables('AKSAGWVNETSubnet1Name')]",
-              "properties": {
-                "addressPrefix": "[variables('AKSAGWVNETSubnet1Prefix')]"
-              }
-            },
-            {
-              "name": "[variables('AKSAGWVNETSubnet2Name')]",
-              "properties": {
-                "addressPrefix": "[variables('AKSAGWVNETSubnet2Prefix')]"
-              }
-            }
-          ]
-        }
+    {
+      "name": "AKS",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "AKS"
       },
-      {
-        "name": "AKSVNET",
-        "type": "Microsoft.Network/virtualNetworks",
-        "location": "[resourceGroup().location]",
-        "apiVersion": "2016-03-30",
-        "dependsOn": [],
-        "tags": {
-          "displayName": "AKSVNET"
-        },
-        "properties": {
-          "addressSpace": {
-            "addressPrefixes": [
-              "[variables('AKSVNETPrefix')]"
-            ]
-          },
-          "subnets": [
-            {
-              "name": "[variables('AKSVNETSubnet1Name')]",
-              "properties": {
-                "addressPrefix": "[variables('AKSVNETSubnet1Prefix')]"
-              }
-            },
-            {
-              "name": "[variables('AKSVNETSubnet2Name')]",
-              "properties": {
-                "addressPrefix": "[variables('AKSVNETSubnet2Prefix')]"
-              }
-            }
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('AKSPrefix')]"
           ]
-        }
+        },
+        "subnets": [
+          {
+            "name": "[variables('AKSSubnet1Name')]",
+            "properties": {
+              "addressPrefix": "[variables('AKSSubnet1Prefix')]"
+            }
+          },
+          {
+            "name": "[variables('AKSSubnet2Name')]",
+            "properties": {
+              "addressPrefix": "[variables('AKSSubnet2Prefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "agwvnet",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "agwvnet"
       },
-    
-  ],
-  "outputs": { }
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('agwvnetPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('agwvnetSubnet1Name')]",
+            "properties": {
+              "addressPrefix": "[variables('agwvnetSubnet1Prefix')]"
+            }
+          },
+          {
+            "name": "[variables('agwvnetSubnet2Name')]",
+            "properties": {
+              "addressPrefix": "[variables('agwvnetSubnet2Prefix')]"
+            }
+          }
+        ]
+      }
+    }],
+  "outputs": {}
 }
