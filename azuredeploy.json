@@ -2,117 +2,184 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "rgNamePrefix": {
-      "type": "string",
-      "defaultValue": "CTRDEMORG"
+    "publicIPAddresses_domainNameLabel": {
+      "type": "SecureString",
+      "defaultValue": "pipdomainnamelabel"
     },
-    "rgLocation": {
-      "defaultValue": "eastus2",
-      "type": "string"
+    "PublicIPAddresses_name": {
+      "defaultValue": "publicIp1",
+      "type": "String"
+    },
+    "virtualNetworks_bedrockvnet2_name": {
+      "defaultValue": "bedrockterraformvnet2",
+      "type": "String"
+    },
+    "agwVirtualNetwork_name": {
+      "defaultValue": "agwVirtualNetwork",
+      "type": "String"
+    },
+    "ApplicationGateway_name": {
+      "defaultValue": "Appgateway",
+      "type": "String"
     },
     "applicationGateways_ApplicationGateway2_name": {
       "defaultValue": "ApplicationGateway2",
       "type": "String"
     },
-    "virtualNetworks_agwVirtualNetwork2_externalid": {
-      "defaultValue": "agwVirtualNetwork2",
+    "agwVirtualNetwork2Subnet1Name": {
+      "defaultValue": "appgwsubnet",
       "type": "String"
     },
-    "publicIPAddresses_publicIp1_externalid": {
-      "defaultValue": "publicIp1",
-      "type": "String"
-    },
-    "publicIPAddresses_publicIp1_domainNameLabel": {
-      "type": "SecureString"
-    },
-    "publicIPAddresses_publicIp1_name": {
-      "defaultValue": "publicIp1",
+    "agwVirtualNetwork2Subnet1Prefix": {
+      "defaultValue": "15.1.0.0/16",
       "type": "String"
     }
   },
   "variables": {
     "agwVirtualNetwork2Prefix": "15.0.0.0/8",
-    "agwVirtualNetwork2Subnet1Name": "appgwsubnet",
-    "agwVirtualNetwork2Subnet1Prefix": "15.1.0.0/16",
-    "agwVirtualNetwork2Subnet2Name": "Subnet-2",
-    "agwVirtualNetwork2Subnet2Prefix": "15.1.0.0/24",
-    "bedrockvnet2Prefix": "10.0.0.0/16",
-    "bedrockvnet2Subnet1Name": "bedrockterraformclust2-aks-subnet",
-    "bedrockvnet2Subnet1Prefix": "10.10.1.0/24"
+    "bedrockterraformvnet2Prefix": "10.0.0.0/16",
+    "bedrockterraformvnet2Subnet1Name": "bedrockterraformclust2-aks-subnet",
+    "bedrockterraformvnet2Subnet1Prefix": "10.0.0.0/24"
   },
   "resources": [
     {
-      "name": "[parameters('rgNamePrefix')]",
-      "type": "Microsoft.Resources/resourceGroups resource",
-      "location": "[parameters('rgLocation')]",
-      "apiVersion": "2019-10-01",
-      "tags": {
-        "displayName": "ctrdemo" 
-       },
-      "properties": {}
-    },
-      {
-      "name": "agwVirtualNetwork2",
-      "type": "Microsoft.Network/virtualNetworks",
-      "location": "[resourceGroup().location]",
-      "apiVersion": "2016-03-30",
-      "dependsOn": [ ],
-      "tags": {
-        "displayName": "agwVirtualNetwork2"
-      },
-      "properties": {
-        "addressSpace": {
-          "addressPrefixes": [
-            "[variables('agwVirtualNetwork2Prefix')]"
-          ]
-        },
-        "subnets": [
-          {
-            "name": "[variables('agwVirtualNetwork2Subnet1Name')]",
-            "properties": {
-              "addressPrefix": "[variables('agwVirtualNetwork2Subnet1Prefix')]"
-            }
-          },
-          {
-            "name": "[variables('agwVirtualNetwork2Subnet2Name')]",
-            "properties": {
-              "addressPrefix": "[variables('agwVirtualNetwork2Subnet2Prefix')]"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "bedrockterraformvnet2",
-      "type": "Microsoft.Network/virtualNetworks",
-      "location": "[resourceGroup().location]",
-      "apiVersion": "2016-03-30",
-      "dependsOn": [],
-      "tags": {
-        "displayName": "bedrockterraformvnet2"
-      },
-      "properties": {
-        "addressSpace": {
-          "addressPrefixes": [
-            "[variables('bedrockvnet2Prefix')]"
-          ]
-        },
-        "subnets": [
-          {
-            "name": "[variables('bedrockvnet2Subnet1Name')]",
-            "properties": {
-              "addressPrefix": "[variables('bedrockvnet2Subnet1Prefix')]"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "[parameters('applicationGateways_ApplicationGateway2_name')]",
-      "type": "Microsoft.Network/applicationGateways",
+      "type": "Microsoft.Network/publicIPAddresses",
       "apiVersion": "2019-11-01",
-      "location": "[parameters('rgLocation')]",
-      "tags": { "displayName": "applicationGateway" },
+      "name": "[parameters('PublicIPAddresses_name')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Basic"
+      },
+      "properties": {
+        "ipAddress": "52.179.251.210",
+        "publicIPAddressVersion": "IPv4",
+        "publicIPAllocationMethod": "Dynamic",
+        "idleTimeoutInMinutes": 4,
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('publicIPAddresses_domainNameLabel')]"
+        },
+        "ipTags": []
+      }
+    },
+
+    {
+      "name": "[parameters('agwVirtualNetwork_name')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2019-11-01",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_bedrockvnet2_name'))]"
+      ],
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "15.0.0.0/8"
+          ]
+        },
+        "dhcpOptions": {
+          "dnsServers": []
+        },
+        "subnets": [
+          {
+            "name": "[parameters('agwVirtualNetwork2Subnet1Name')]",
+            "properties": {
+              "addressPrefix": "15.1.0.0/16",
+              "delegations": [],
+              "privateEndpointNetworkPolicies": "Enabled",
+              "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+          }
+        ],
+        "virtualNetworkPeerings": [
+          {
+            "name": "peer_AGW-AKS",
+            "properties": {
+              "peeringState": "Connected",
+              "remoteVirtualNetwork": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_bedrockvnet2_name'))]"
+              },
+              "allowVirtualNetworkAccess": false,
+              "allowForwardedTraffic": false,
+              "allowGatewayTransit": false,
+              "useRemoteGateways": false,
+              "remoteAddressSpace": {
+                "addressPrefixes": [
+                  "10.10.0.0/16"
+                ]
+              }
+            }
+          }
+        ],
+        "enableDdosProtection": false,
+        "enableVmProtection": false
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2019-11-01",
+      "name": "[parameters('virtualNetworks_bedrockvnet2_name')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('agwVirtualNetwork_name'))]"
+      ],
+      "tags": {
+        "environment": "azure-simple"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "10.10.0.0/16"
+          ]
+        },
+        "dhcpOptions": {
+          "dnsServers": []
+        },
+        "subnets": [
+          {
+            "name": "bedrockterraformclust2-aks-subnet",
+            "properties": {
+              "addressPrefix": "10.10.1.0/24",
+              "serviceEndpoints": [],
+              "delegations": [],
+              "privateEndpointNetworkPolicies": "Enabled",
+              "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+          }
+        ],
+        "virtualNetworkPeerings": [
+          {
+            "name": "peer_AKS-AGW",
+            "properties": {
+              "peeringState": "Connected",
+              "remoteVirtualNetwork": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('agwVirtualNetwork_name'))]"
+              },
+              "allowVirtualNetworkAccess": false,
+              "allowForwardedTraffic": false,
+              "allowGatewayTransit": false,
+              "useRemoteGateways": false,
+              "remoteAddressSpace": {
+                "addressPrefixes": [
+                  "15.0.0.0/8"
+                ]
+              }
+            }
+          }
+        ],
+        "enableDdosProtection": false,
+        "enableVmProtection": false
+      }
+    },
+    {
+      "name": "[parameters('ApplicationGateway_name')]",
+      "type": "Microsoft.Network/applicationGateways",
+      "apiVersion": "2019-06-01",
+
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('ApplicationGateway_name'), parameters('agwVirtualNetwork2Subnet1Name'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('PublicIPAddresses_name'))]"
+      ],
       "properties": {
         "sku": {
           "name": "Standard_Small",
@@ -124,7 +191,7 @@
             "name": "appGatewayIpConfig",
             "properties": {
               "subnet": {
-                "id": "[concat(parameters('virtualNetworks_agwVirtualNetwork2_externalid'), '/subnets/appgwsubnet')]"
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('ApplicationGateway_name'), parameters('agwVirtualNetwork2Subnet1Name'))]"
               }
             }
           }
@@ -137,7 +204,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "publicIPAddress": {
-                "id": "[parameters('publicIPAddresses_publicIp1_externalid')]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('PublicIPAddresses_name'))]"
               }
             }
           }
@@ -222,28 +289,53 @@
       }
     },
     {
-      "name": "[parameters('publicIPAddresses_publicIp1_name')]",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "apiVersion": "2019-11-01",
-      "location": "[parameters('rgLocation')]",
-      "tags": {
-        "displayName": "publicip1"
-      },
-        "sku": {
-          "name": "Basic"
+      "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+      "apiVersion": "2019-06-01",
+      "name": "[concat(parameters('agwVirtualNetwork_name'), '/peer_AGW-AKS')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('agwVirtualNetwork_name'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_bedrockvnet2_name'))]"
+      ],
+      "properties": {
+        "peeringState": "Connected",
+        "remoteVirtualNetwork": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_bedrockvnet2_name'))]"
         },
-        "properties": {
-          "ipAddress": "52.179.251.210",
-          "publicIPAddressVersion": "IPv4",
-          "publicIPAllocationMethod": "Dynamic",
-          "idleTimeoutInMinutes": 4,
-          "dnsSettings": {
-            "fqdn": "68a371fe-2a5c-425d-8238-0893e6d1efe8.cloudapp.net",
-            "domainNameLabel": "[parameters('publicIPAddresses_publicIp1_domainNameLabel')]"
-          },
-          "ipTags": []
+        "allowVirtualNetworkAccess": false,
+        "allowForwardedTraffic": false,
+        "allowGatewayTransit": false,
+        "useRemoteGateways": false,
+        "remoteAddressSpace": {
+          "addressPrefixes": [
+            "10.10.0.0/16"
+          ]
         }
       }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+      "apiVersion": "2019-06-01",
+      "name": "[concat(parameters('virtualNetworks_bedrockvnet2_name'), '/peer_AKS-AGW')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_bedrockvnet2_name'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('agwVirtualNetwork_name'))]"
+      ],
+      "properties": {
+        "peeringState": "Connected",
+        "remoteVirtualNetwork": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('agwVirtualNetwork_name'))]"
+        },
+        "allowVirtualNetworkAccess": false,
+        "allowForwardedTraffic": false,
+        "allowGatewayTransit": false,
+        "useRemoteGateways": false,
+        "remoteAddressSpace": {
+          "addressPrefixes": [
+            "15.0.0.0/8"
+          ]
+        }
+      }
+    }
   ],
   "outputs": {}
 }
