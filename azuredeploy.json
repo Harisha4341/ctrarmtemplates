@@ -2,73 +2,58 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "publicIPAddresses_domainNameLabel": {
-      "type": "SecureString",
-      "defaultValue": "pipdomainnamelabel"
+    "publicIPAddresses_publicIp1_domainNameLabel": {
+      "type": "SecureString"
     },
-    "PublicIPAddresses_name": {
+    "publicIPAddresses_publicIp1_name": {
       "defaultValue": "publicIp1",
       "type": "String"
     },
-    "virtualNetworks_bedrockvnet2_name": {
+    "virtualNetworks_agwVirtualNetwork2_name": {
+      "defaultValue": "agwVirtualNetwork2",
+      "type": "String"
+    },
+    "virtualNetworks_bedrockterraformvnet2_name": {
       "defaultValue": "bedrockterraformvnet2",
-      "type": "String"
-    },
-    "agwVirtualNetwork_name": {
-      "defaultValue": "agwVirtualNetwork",
-      "type": "String"
-    },
-    "ApplicationGateway_name": {
-      "defaultValue": "Appgateway",
       "type": "String"
     },
     "applicationGateways_ApplicationGateway2_name": {
       "defaultValue": "ApplicationGateway2",
       "type": "String"
     },
-    "agwVirtualNetwork2Subnet1Name": {
-      "defaultValue": "appgwsubnet",
+    "managedClusters_bedrockterraformclust2_name": {
+      "defaultValue": "bedrockterraformclust2",
       "type": "String"
-    },
-    "agwVirtualNetwork2Subnet1Prefix": {
-      "defaultValue": "15.1.0.0/16",
-      "type": "String"
+
     }
   },
-  "variables": {
-    "agwVirtualNetwork2Prefix": "15.0.0.0/8",
-    "bedrockterraformvnet2Prefix": "10.0.0.0/16",
-    "bedrockterraformvnet2Subnet1Name": "bedrockterraformclust2-aks-subnet",
-    "bedrockterraformvnet2Subnet1Prefix": "10.0.0.0/24"
-  },
+  "variables": {},
   "resources": [
     {
       "type": "Microsoft.Network/publicIPAddresses",
       "apiVersion": "2019-11-01",
-      "name": "[parameters('PublicIPAddresses_name')]",
+      "name": "[parameters('publicIPAddresses_publicIp1_name')]",
       "location": "[resourceGroup().location]",
       "sku": {
         "name": "Basic"
       },
       "properties": {
-        "ipAddress": "52.179.251.210",
         "publicIPAddressVersion": "IPv4",
         "publicIPAllocationMethod": "Dynamic",
         "idleTimeoutInMinutes": 4,
         "dnsSettings": {
-          "domainNameLabel": "[parameters('publicIPAddresses_domainNameLabel')]"
+          "domainNameLabel": "[parameters('publicIPAddresses_publicIp1_domainNameLabel')]"
         },
         "ipTags": []
       }
     },
-
     {
-      "name": "[parameters('agwVirtualNetwork_name')]",
       "type": "Microsoft.Network/virtualNetworks",
       "apiVersion": "2019-11-01",
+      "name": "[parameters('virtualNetworks_agwVirtualNetwork2_name')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_bedrockvnet2_name'))]"
+
       ],
       "properties": {
         "addressSpace": {
@@ -81,7 +66,7 @@
         },
         "subnets": [
           {
-            "name": "[parameters('agwVirtualNetwork2Subnet1Name')]",
+            "name": "appgwsubnet",
             "properties": {
               "addressPrefix": "15.1.0.0/16",
               "delegations": [],
@@ -96,7 +81,7 @@
             "properties": {
               "peeringState": "Connected",
               "remoteVirtualNetwork": {
-                "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_bedrockvnet2_name'))]"
+                "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_bedrockterraformvnet2_name'))]"
               },
               "allowVirtualNetworkAccess": false,
               "allowForwardedTraffic": false,
@@ -117,10 +102,10 @@
     {
       "type": "Microsoft.Network/virtualNetworks",
       "apiVersion": "2019-11-01",
-      "name": "[parameters('virtualNetworks_bedrockvnet2_name')]",
+      "name": "[parameters('virtualNetworks_bedrockterraformvnet2_name')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', parameters('agwVirtualNetwork_name'))]"
+
       ],
       "tags": {
         "environment": "azure-simple"
@@ -152,7 +137,7 @@
             "properties": {
               "peeringState": "Connected",
               "remoteVirtualNetwork": {
-                "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('agwVirtualNetwork_name'))]"
+                "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_agwVirtualNetwork2_name'))]"
               },
               "allowVirtualNetworkAccess": false,
               "allowForwardedTraffic": false,
@@ -171,14 +156,106 @@
       }
     },
     {
-      "name": "[parameters('ApplicationGateway_name')]",
-      "type": "Microsoft.Network/applicationGateways",
+      "type": "Microsoft.Network/virtualNetworks/subnets",
+      "apiVersion": "2019-11-01",
+      "name": "[concat(parameters('virtualNetworks_agwVirtualNetwork2_name'), '/appgwsubnet')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_agwVirtualNetwork2_name'))]"
+      ],
+      "properties": {
+        "addressPrefix": "15.1.0.0/16",
+        "delegations": [],
+        "privateEndpointNetworkPolicies": "Enabled",
+        "privateLinkServiceNetworkPolicies": "Enabled"
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks/subnets",
+      "apiVersion": "2019-11-01",
+      "name": "[concat(parameters('virtualNetworks_bedrockterraformvnet2_name'), '/bedrockterraformclust2-aks-subnet')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_bedrockterraformvnet2_name'))]"
+      ],
+      "properties": {
+        "addressPrefix": "10.10.1.0/24",
+        "serviceEndpoints": [],
+        "delegations": [],
+        "privateEndpointNetworkPolicies": "Enabled",
+        "privateLinkServiceNetworkPolicies": "Enabled"
+      }
+    },
+    {
+      "type": "Microsoft.ContainerService/managedClusters",
       "apiVersion": "2019-06-01",
-
+      "name": "[parameters('managedClusters_bedrockterraformclust2_name')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('ApplicationGateway_name'), parameters('agwVirtualNetwork2Subnet1Name'))]",
-        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('PublicIPAddresses_name'))]"
+
+      ],
+      "sku": {
+        "name": "Basic",
+        "tier": "Free"
+      },
+      "identity": {
+        "type": "None"
+      },
+      "properties": {
+        "kubernetesVersion": "1.15.7",
+        "dnsPrefix": "bedrockterraformdns2",
+        "agentPoolProfiles": [
+          {
+            "name": "default",
+            "count": 1,
+            "vmSize": "Standard_D2s_v3",
+            "osDiskSizeGB": 30,
+            "vnetSubnetID": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_bedrockterraformvnet2_name'), concat(parameters('managedClusters_bedrockterraformclust2_name'), '-aks-subnet'))]",
+            "maxPods": 30,
+            "type": "VirtualMachineScaleSets",
+            "enableAutoScaling": false,
+            "orchestratorVersion": "1.15.7",
+            "enableNodePublicIP": false,
+            "mode": "User",
+            "osType": "Linux"
+          }
+        ],
+        "linuxProfile": {
+          "adminUsername": "k8sadmin",
+          "ssh": {
+            "publicKeys": [
+              {
+                "keyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDjxcOFAcE1uIUZgrgqEM5kn4Yp0kWZFvowPSzr9/qhT5a+/Lfer8LS9s/eyff2rUe5645vtBfPnc/5j34Exw5vTawZee+zvIDj+wXqTvMdhYuEmGJ7/uDsBqZ03iMDQgHiWhtONgG6a26POceXBrc5dL/Pla5awF1C0OXXWYddLusLZ7rcQKkd2eZ3WrKRMmbH3uLjsCjSsb7CBwHmVo71bvkgCY+qoQC+8lTDtUjrFZ7Dtj1jnkHCOEEvXCKBDJtPjWA2G3MYFG+UhJ8EfVeXlgOobXGG+whD1vcLKJ+hoXJkCm+7MXLZElOAPDE6RCjpgnHIpZyMfScc0NYGJygf2gZyvqDkIj44SDaEuzNSJdCv/iT0v+1DWFbbI8uFALfq2EhZW1JHUr3bqzQrw7A7uUlStDk+Lvj/W7gVTthLpFyN/J4/AHgDW6nwysukb2PYiuPfKCMkEvwFEzsdqznjTfzq8ziqbrInxV1+dnbOPPvywF7LSm5RdqfqsCmNi8JA8eE+YPm9Fzd912fGXhtea+fZu+u1b+xgeG9f4FHJO/sbXhm5oMIo+qM5/J2GgY8WHV8PlNHYuT3IGkpcRWioFnDohIp2EztHtaefhYQYK4J3T5FWWFP3tKA7RrgtlFL8VOLIhTFI4Z6eW1ffrbrjnfuY77O2SEZq1jacbhDJWw== shasank_sunkara@cc-3b1f1e2c-799c6b8b7b-nlldw"
+              }
+            ]
+          }
+        },
+        "servicePrincipalProfile": {
+          "clientId": "b4c3da2e-e909-4e73-9714-9ba3c3c3e82e",
+          "Secret": "392855ef-e6a4-45d1-9604-7cbc4d7b3306"
+        },
+        "nodeResourceGroup": "[concat('MC_Bedrock_terraformdemoRG2_', parameters('managedClusters_bedrockterraformclust2_name'), '_eastus2')]",
+        "enableRBAC": true,
+        "enablePodSecurityPolicy": false,
+        "networkProfile": {
+          "networkPlugin": "azure",
+          "networkPolicy": "azure",
+          "loadBalancerSku": "Basic",
+          "serviceCidr": "10.0.0.0/16",
+          "dnsServiceIP": "10.0.0.10",
+          "dockerBridgeCidr": "172.17.0.1/16",
+          "outboundType": "loadBalancer"
+        },
+        "apiServerAccessProfile": {
+          "enablePrivateCluster": false
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/applicationGateways",
+      "apiVersion": "2019-11-01",
+      "name": "[parameters('applicationGateways_ApplicationGateway2_name')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+
       ],
       "properties": {
         "sku": {
@@ -191,7 +268,7 @@
             "name": "appGatewayIpConfig",
             "properties": {
               "subnet": {
-                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('ApplicationGateway_name'), parameters('agwVirtualNetwork2Subnet1Name'))]"
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_agwVirtualNetwork2_name'), 'appgwsubnet')]"
               }
             }
           }
@@ -204,7 +281,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('PublicIPAddresses_name'))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_publicIp1_name'))]"
               }
             }
           }
@@ -290,16 +367,16 @@
     },
     {
       "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
-      "apiVersion": "2019-06-01",
-      "name": "[concat(parameters('agwVirtualNetwork_name'), '/peer_AGW-AKS')]",
+      "apiVersion": "2019-11-01",
+      "name": "[concat(parameters('virtualNetworks_agwVirtualNetwork2_name'), '/peer_AGW-AKS')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', parameters('agwVirtualNetwork_name'))]",
-        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_bedrockvnet2_name'))]"
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_agwVirtualNetwork2_name'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_bedrockterraformvnet2_name'))]"
       ],
       "properties": {
         "peeringState": "Connected",
         "remoteVirtualNetwork": {
-          "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_bedrockvnet2_name'))]"
+          "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_bedrockterraformvnet2_name'))]"
         },
         "allowVirtualNetworkAccess": false,
         "allowForwardedTraffic": false,
@@ -314,16 +391,16 @@
     },
     {
       "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
-      "apiVersion": "2019-06-01",
-      "name": "[concat(parameters('virtualNetworks_bedrockvnet2_name'), '/peer_AKS-AGW')]",
+      "apiVersion": "2019-11-01",
+      "name": "[concat(parameters('virtualNetworks_bedrockterraformvnet2_name'), '/peer_AKS-AGW')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_bedrockvnet2_name'))]",
-        "[resourceId('Microsoft.Network/virtualNetworks', parameters('agwVirtualNetwork_name'))]"
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_bedrockterraformvnet2_name'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_agwVirtualNetwork2_name'))]"
       ],
       "properties": {
         "peeringState": "Connected",
         "remoteVirtualNetwork": {
-          "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('agwVirtualNetwork_name'))]"
+          "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_agwVirtualNetwork2_name'))]"
         },
         "allowVirtualNetworkAccess": false,
         "allowForwardedTraffic": false,
@@ -336,6 +413,5 @@
         }
       }
     }
-  ],
-  "outputs": {}
+  ]
 }
